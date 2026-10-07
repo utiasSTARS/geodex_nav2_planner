@@ -1,0 +1,97 @@
+name: build
+
+# The jobs of one ROS 2 distribution. jazzy.yml and lyrical.yml call this workflow.
+on:
+  workflow_call:
+    inputs:
+      distro:
+        description: ROS 2 distribution, jazzy or lyrical
+        required: true
+        type: string
+      image:
+        description: Container image of the apt job, pinned by digest
+        required: true
+        type: string
+      sanitizers:
+        description: Run the AddressSanitizer tests too
+        default: false
+        type: boolean
+
+# scripts/deps.env pins the geodex source that every job builds against. A repository
+# variable of the same name overrides the pin.
+env:
+  GEODEX_REPO: ${{ vars.GEODEX_REPO }}
+  GEODEX_REF: ${{ vars.GEODEX_REF }}
+  ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+
+jobs:
+  pins:
+    name: pinned dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Check that geodex is pinned to a tag or a full commit
+        run: |
+          unset GEODEX_REF
+          source scripts/deps.env
+          [[ "$GEODEX_REF" =~ ^([0-9a-f]{40}|v[0-9]+\.[0-9]+\.[0-9]+)$ ]]
+      - name: Check that every pixi dependency has an exact version
+        run: |
+          awk '/^\[/{dep = ($0 ~ /dependencies\]$/)} dep && /=/ && $0 !~ /= "==/ {print NR": "$0; bad=1} END{exit bad}' pixi.toml
+
+  pixi:
+    name: pixi on ${{ matrix.os }}
+    needs: pins
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e  # v0.10.2
+        with:
+          pixi-version: v0.81.0
+          environments: ${{ inputs.distro }}
+          locked: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      - run: pixi run -e ${{ inputs.distro }} test
+
+  sanitizers:
+    name: AddressSanitizer, teardown races
+    if: inputs.sanitizers
+    needs: pins
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e  # v0.10.2
+        with:
+          pixi-version: v0.81.0
+          environments: ${{ inputs.distro }}
+          locked: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      - run: pixi run -e ${{ inputs.distro }} test-asan
+
+  apt:
+    name: apt
+    needs: pins
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Build geodex and the OMPL fork
+        run: |
+          apt-get update
+          apt-get upgrade -y
+          apt-get install -y --no-install-recommends git cmake ninja-build g++ python3-yaml \
+            libboost-serialization-dev libboost-program-options-dev
+          bash scripts/build_deps.sh /opt/geodex_deps
+      - uses: ros-tooling/action-ros-ci@3a640b10f09b756dabe556dac5413aba369f71b0  # 0.4.8
+        with:
+          package-name: geodex_nav2_planner
+          target-ros2-distro: ${{ inputs.distro }}
+          rosdep-skip-keys: geodex
+          extra-cmake-args: -DCMAKE_PREFIX_PATH=/opt/geodex_deps -DCMAKE_BUILD_TYPE=Release

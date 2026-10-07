@@ -1,0 +1,15 @@
+name: Lyrical
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      distro: lyrical
+      image: rostooling/setup-ros-docker:ubuntu-resolute-ros-lyrical-ros-base-latest@sha256:bb061acc9dc76ecdb0c2f6d47b4851b632768bdb11679565080fb89b6e1d1e73
+      sanitizers: false

@@ -1,0 +1,15 @@
+name: Jazzy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      distro: jazzy
+      image: rostooling/setup-ros-docker:ubuntu-noble-ros-jazzy-ros-base-latest@sha256:d8ea1abfb68b5f8acb749d95229729d3caafd54fdd09171517a48366c49bb849
+      sanitizers: true
