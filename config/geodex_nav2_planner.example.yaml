@@ -1,0 +1,67 @@
+# This file holds the planner block of a Nav2 planner server with this plugin as
+# GridBased, with every parameter at its default in
+# params/geodex_nav2_planner_parameters.yaml. test/params checks that
+# this file names exactly the declared parameters.
+
+planner_server:
+  ros__parameters:
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "geodex_nav2_planner::GeodexSE2Planner"
+
+      # Metric
+      wx: 1.0
+      wy: 50.0
+      wtheta: 2.0
+
+      # Search
+      solve_time: 5.0
+      refine_time: 0.01
+      refine_iterations: 0
+      stop_at_first_solution: false
+      range: 12.0
+      greedy_ratio: 0.9
+      narrow_to_heuristic_path_cost: false
+      rewire_factor: 1.1
+      nn_metric: false
+      k_nearest: true
+      goal_tolerance: 0.0
+      seed: 0
+
+      # Collision
+      collision_check_resolution: 0.0
+      safety_margin: 0.0
+      footprint_samples_per_edge: 8
+      lethal_cost_threshold: 254
+      max_reverse_length: -1.0
+      initial_path: false
+
+      # Driving direction, decided after the search
+      max_reverse_run: 0.2
+      reverse_allow_start: 1.0
+      reverse_allow_goal: 1.0
+      forward_repair: true
+      reverse_spin_cost: 0.5
+
+      # Clearance
+      clearance_kappa: 1.5
+      clearance_beta: 3.0
+      clearance_in_search: true
+
+      # Smoothing
+      smoothing_enabled: true
+      smoothing_output_spacing: 0.1
+      smoothing_round_corners: true
+      smoothing_corner_tolerance: 0.0001
+      smoothing_corner_max_angle: 1.5707963267948966
+
+      # Output
+      waypoint_spacing: 0.05
+
+      # Sampling region
+      static_map_topic: "map"
+
+      # Visualization
+      publish_footprints: false
+      marker_spacing: 0.25
+      marker_z: 0.0

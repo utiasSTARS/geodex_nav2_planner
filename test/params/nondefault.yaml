@@ -1,0 +1,45 @@
+# Every parameter of the table at a value other than its default, within its
+# bounds. test_parameters loads it and checks that each value arrives.
+
+planner_server:
+  ros__parameters:
+    GridBased:
+      wx: 37.0063
+      wy: 370.0063
+      wtheta: 37.0006
+      solve_time: 22.2006
+      refine_time: 22.2
+      refine_iterations: 370
+      stop_at_first_solution: true
+      range: 370.0
+      greedy_ratio: 0.37
+      narrow_to_heuristic_path_cost: true
+      rewire_factor: 1.913
+      nn_metric: true
+      k_nearest: false
+      goal_tolerance: 0.74
+      seed: 370
+      collision_check_resolution: 0.37
+      safety_margin: 0.185
+      footprint_samples_per_edge: 24
+      lethal_cost_threshold: 94
+      max_reverse_length: 1.22
+      initial_path: true
+      max_reverse_run: 1.22
+      reverse_allow_start: 3.7
+      reverse_allow_goal: 3.7
+      forward_repair: false
+      reverse_spin_cost: 3.7315
+      clearance_kappa: 18.5
+      clearance_beta: 37.063
+      clearance_in_search: false
+      smoothing_enabled: false
+      smoothing_output_spacing: 0.74
+      smoothing_round_corners: false
+      smoothing_corner_tolerance: 0.0037
+      smoothing_corner_max_angle: 2.2206
+      waypoint_spacing: 0.3763
+      static_map_topic: "nondefault_map"
+      publish_footprints: true
+      marker_spacing: 1.85
+      marker_z: -2.6

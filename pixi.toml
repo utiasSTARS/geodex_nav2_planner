@@ -1,0 +1,130 @@
+[workspace]
+name = "geodex_nav2_planner"
+version = "1.0.0"
+description = "Nav2 global planner on SE(2) as a Riemannian manifold, built on geodex"
+channels = ["https://prefix.dev/conda-forge"]
+platforms = ["linux-64", { platform = "osx-arm64", macos = "15.0" }]
+requires-pixi = ">=0.81.0"
+
+# Build tools shared by every distribution.
+[dependencies]
+cmake = "==4.4.3"
+ninja = "==1.13.2"
+compilers = "==2.0.0"
+git = "==2.55.0"
+pkg-config = "==0.29.2"
+colcon-common-extensions = "==0.3.0"
+libboost-devel = "==1.90.0"
+eigen = "==5.0.1"
+pyyaml = "==6.0.3"
+
+[feature.jazzy]
+channels = ["https://prefix.dev/robostack-jazzy"]
+
+[feature.jazzy.dependencies]
+python = "==3.12.14"
+ros-jazzy-ament-cmake = "==2.5.6"
+ros-jazzy-ament-cmake-clang-format = "==0.17.5"
+ros-jazzy-ament-cmake-gtest = "==2.5.6"
+ros-jazzy-ament-cmake-ros = "==0.12.1"
+ros-jazzy-ament-lint-auto = "==0.17.5"
+ros-jazzy-ament-lint-common = "==0.17.5"
+ros-jazzy-generate-parameter-library = "==0.7.6"
+ros-jazzy-geometry-msgs = "==5.3.8"
+ros-jazzy-launch-ros = "==0.26.12"
+ros-jazzy-launch-testing-ament-cmake = "==3.4.11"
+ros-jazzy-nav2-core = "==1.3.12"
+ros-jazzy-nav2-costmap-2d = "==1.3.12"
+ros-jazzy-nav2-lifecycle-manager = "==1.3.12"
+ros-jazzy-nav2-map-server = "==1.3.12"
+ros-jazzy-nav2-msgs = "==1.3.12"
+ros-jazzy-nav2-planner = "==1.3.12"
+ros-jazzy-nav-msgs = "==5.3.8"
+ros-jazzy-pluginlib = "==5.4.5"
+ros-jazzy-rclcpp = "==28.1.21"
+ros-jazzy-rclcpp-lifecycle = "==28.1.21"
+ros-jazzy-rclpy = "==7.1.11"
+ros-jazzy-ros2cli-common-extensions = "==0.3.1"
+ros-jazzy-rviz2 = "==14.1.23"
+ros-jazzy-tf2 = "==0.36.22"
+ros-jazzy-tf2-ros = "==0.36.22"
+ros-jazzy-visualization-msgs = "==5.3.8"
+
+[feature.lyrical]
+channels = ["https://prefix.dev/robostack-lyrical"]
+
+[feature.lyrical.dependencies]
+python = "==3.14.7"
+ros-lyrical-ament-cmake = "==2.8.8"
+ros-lyrical-ament-cmake-clang-format = "==0.20.6"
+ros-lyrical-ament-cmake-gtest = "==2.8.8"
+ros-lyrical-ament-cmake-ros = "==0.15.8"
+ros-lyrical-ament-lint-auto = "==0.20.6"
+ros-lyrical-ament-lint-common = "==0.20.6"
+ros-lyrical-generate-parameter-library = "==1.3.0"
+ros-lyrical-geometry-msgs = "==5.9.3"
+ros-lyrical-launch-ros = "==0.29.9"
+ros-lyrical-launch-testing-ament-cmake = "==3.9.8"
+ros-lyrical-nav2-core = "==1.5.1"
+ros-lyrical-nav2-costmap-2d = "==1.5.1"
+ros-lyrical-nav2-lifecycle-manager = "==1.5.1"
+# nav2_behavior_tree exports nav2_common to CMake without a run dependency on it.
+ros-lyrical-nav2-common = "==1.5.1"
+ros-lyrical-nav2-map-server = "==1.5.1"
+ros-lyrical-nav2-msgs = "==1.5.1"
+ros-lyrical-nav2-planner = "==1.5.1"
+ros-lyrical-nav2-ros-common = "==1.5.1"
+ros-lyrical-nav-msgs = "==5.9.3"
+ros-lyrical-pluginlib = "==5.8.5"
+ros-lyrical-rclcpp = "==32.0.3"
+ros-lyrical-rclcpp-lifecycle = "==32.0.3"
+ros-lyrical-rclpy = "==10.0.11"
+ros-lyrical-rmw-test-fixture-implementation = "==0.15.8"
+ros-lyrical-ros2cli-common-extensions = "==0.5.2"
+ros-lyrical-rviz2 = "==15.2.5"
+ros-lyrical-tf2 = "==0.45.9"
+ros-lyrical-tf2-ros = "==0.45.9"
+ros-lyrical-visualization-msgs = "==5.9.3"
+
+[environments]
+jazzy = { features = ["jazzy"], no-default-feature = false }
+lyrical = { features = ["lyrical"], no-default-feature = false }
+
+[activation.env]
+ROS_AUTOMATIC_DISCOVERY_RANGE = "LOCALHOST"
+
+[tasks.build-geodex]
+description = "Build geodex and the OMPL fork from pinned sources into .pixi/deps/<env>"
+cmd = "bash scripts/build_deps.sh .pixi/deps/$PIXI_ENVIRONMENT_NAME"
+
+[tasks.build]
+description = "Build the plugin with colcon"
+cmd = """mkdir -p build install log && touch build/AMENT_IGNORE install/AMENT_IGNORE log/AMENT_IGNORE \
+         && colcon build --paths . --build-base build/$PIXI_ENVIRONMENT_NAME \
+         --install-base install/$PIXI_ENVIRONMENT_NAME --event-handlers console_cohesion+ \
+         --cmake-args -G Ninja -DCMAKE_BUILD_TYPE=Release \
+         -DCMAKE_PREFIX_PATH=$PIXI_PROJECT_ROOT/.pixi/deps/$PIXI_ENVIRONMENT_NAME"""
+depends-on = ["build-geodex"]
+
+[tasks.test-asan]
+description = "Build the tests with AddressSanitizer and run the teardown race tests"
+cmd = """mkdir -p build install log && touch build/AMENT_IGNORE install/AMENT_IGNORE log/AMENT_IGNORE \
+         && colcon build --paths . --build-base build/$PIXI_ENVIRONMENT_NAME-asan \
+         --install-base install/$PIXI_ENVIRONMENT_NAME-asan --event-handlers console_cohesion+ \
+         --cmake-args -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGEODEX_NAV2_ISOLATED_TESTS=OFF \
+         "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer" \
+         -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address \
+         -DCMAKE_PREFIX_PATH=$PIXI_PROJECT_ROOT/.pixi/deps/$PIXI_ENVIRONMENT_NAME \
+         && ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 \
+         build/$PIXI_ENVIRONMENT_NAME-asan/geodex_nav2_planner/test/test_planner \
+         "--gtest_filter=CallbackGate.*:GatedParameters.*:PlannerTest.DestroysCleanlyWhileItsCallbacksRun" \
+         --gtest_repeat=5"""
+depends-on = ["build-geodex"]
+
+[tasks.test]
+description = "Build, then run every test and print the results"
+cmd = """colcon test --paths . --build-base build/$PIXI_ENVIRONMENT_NAME \
+         --install-base install/$PIXI_ENVIRONMENT_NAME --event-handlers console_cohesion+ \
+         --return-code-on-test-failure \
+         && colcon test-result --test-result-base build/$PIXI_ENVIRONMENT_NAME --verbose"""
+depends-on = ["build"]

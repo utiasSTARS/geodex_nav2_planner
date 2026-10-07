@@ -1,0 +1,54 @@
+# This file holds the planner server and global costmap of a Nav2 bring-up with this plugin
+# as the GridBased planner. Replace these two blocks in a Nav2 parameter file, for example the
+# nav2_bringup one, and keep the rest. Parameters left out take their defaults, listed
+# in full in geodex_nav2_planner.example.yaml. config/robots/ holds footprints and metric
+# weights for Clearpath bases.
+#
+# The plugin plans on its own exact distance transform of the lethal cells. The global
+# costmap does not need an inflation layer. Cells at or above lethal_cost_threshold are
+# obstacles.
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 20.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "geodex_nav2_planner::GeodexSE2Planner"
+      # Time limit in seconds for the searches of one request. When the planner server
+      # deactivates, it waits for a running plan for at most this time plus the distance
+      # transform, smoothing and publishing.
+      solve_time: 5.0
+      refine_time: 0.01
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      # Publish the full grid on every cycle. An RViz that starts after the planner server
+      # shows the costmap only with this setting.
+      always_send_full_costmap: true
+      global_frame: map
+      robot_base_frame: base_link
+      resolution: 0.05
+      track_unknown_space: true
+      # This footprint is a 0.60 x 0.40 m rectangle. Take a robot's own from config/robots/.
+      footprint: "[[0.30, 0.20], [0.30, -0.20], [-0.30, -0.20], [-0.30, 0.20]]"
+      footprint_padding: 0.01
+      plugins: ["static_layer", "obstacle_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0

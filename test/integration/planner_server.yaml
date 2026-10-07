@@ -1,0 +1,13 @@
+# Test overrides on top of config/nav2_params.yaml. GridBased plans with a short budget
+# and a fixed seed. Slow refines for 30 s, and a request to it lasts long enough to cancel.
+planner_server:
+  ros__parameters:
+    planner_plugins: ["GridBased", "Slow"]
+    GridBased:
+      plugin: "geodex_nav2_planner::GeodexSE2Planner"
+      solve_time: 2.0
+      seed: 11
+    Slow:
+      plugin: "geodex_nav2_planner::GeodexSE2Planner"
+      solve_time: 30.0
+      refine_time: 30.0

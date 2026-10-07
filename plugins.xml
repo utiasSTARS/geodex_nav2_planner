@@ -1,0 +1,11 @@
+<library path="geodex_nav2_planner">
+  <class type="geodex_nav2_planner::GeodexSE2Planner"
+         base_class_type="nav2_core::GlobalPlanner">
+    <description>
+      Global planner on SE(2) as a Riemannian manifold. It searches with G-RRT*
+      under a left-invariant metric with a clearance factor over an exact distance
+      transform of the costmap, then smooths on the same metric. It publishes every
+      smoothed waypoint and splits each edge into equal steps.
+    </description>
+  </class>
+</library>
